@@ -5,6 +5,36 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --font-clash: 'Clash Display', system-ui, sans-serif;
+  --font-satoshi: 'Satoshi', system-ui, sans-serif;
+}
+
+/* ── Global typography ───────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Clash Display', system-ui, sans-serif;
+}
+
+h1 { font-weight: 700; }          /* Clash Display Bold */
+h2, h3 { font-weight: 600; }      /* Clash Display SemiBold */
+
+body {
+  font-family: 'Satoshi', system-ui, sans-serif;
+  font-weight: 400;                /* Satoshi Regular */
+}
+
+p, li, span {
+  font-family: 'Satoshi', system-ui, sans-serif;
+}
+
+/* Tailwind Typography helpers */
+.font-clash   { font-family: 'Clash Display', system-ui, sans-serif; }
+.font-satoshi { font-family: 'Satoshi', system-ui, sans-serif; }
+.satoshi-light  { font-family: 'Satoshi', system-ui, sans-serif; font-weight: 300; }
+.satoshi-medium { font-family: 'Satoshi', system-ui, sans-serif; font-weight: 500; }
+.satoshi-bold   { font-family: 'Satoshi', system-ui, sans-serif; font-weight: 700; }
+
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -18,8 +48,8 @@
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: 'Satoshi', system-ui, sans-serif;
+  --heading: 'Clash Display', system-ui, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
   font: 18px/145% var(--sans);
@@ -118,19 +148,15 @@
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
+  width: 100%;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  background: #060d1f;
 }
 
 h1,
@@ -144,20 +170,24 @@ h1 {
   font-size: 56px;
   letter-spacing: -1.68px;
   margin: 32px 0;
+
   @media (max-width: 1024px) {
     font-size: 36px;
     margin: 20px 0;
   }
 }
+
 h2 {
   font-size: 24px;
   line-height: 118%;
   letter-spacing: -0.24px;
   margin: 0 0 8px;
+
   @media (max-width: 1024px) {
     font-size: 20px;
   }
 }
+
 p {
   margin: 0;
 }
@@ -256,8 +286,38 @@ code {
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;}
+    @apply border-border outline-ring/50;
+  }
+
   body {
-    @apply bg-background text-foreground;}
+    @apply bg-background text-foreground;
+  }
+
   html {
-    @apply font-sans;}}
+    @apply font-sans;
+  }
+}
+
+
+
+
+@theme inline {
+  --animate-cell-ripple: cell-ripple var(--duration, 200ms) ease-out none 1 var(--delay, 0ms);
+
+  @keyframes cell-ripple {
+    0% {
+      opacity: 0.4;
+    }
+
+    50% {
+      opacity: 0.8;
+    }
+
+    100% {
+      opacity: 0.4;
+    }
+  }
+}
+/* Hide scrollbars globally */
+* { scrollbar-width: none; }
+*::-webkit-scrollbar { display: none; }
