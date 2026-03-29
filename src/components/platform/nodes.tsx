@@ -119,6 +119,9 @@ export function OutputNode({ id, data }: OutputNodeData) {
       </div>
       <p className="text-sm font-semibold text-white">{data.label}</p>
       <p className="mt-0.5 text-xs leading-relaxed text-neutral-500">{data.description}</p>
+      {data.status === "complete" && (
+        <p className="mt-1.5 text-[10px] font-semibold text-emerald-400/70">↗ click to view results</p>
+      )}
     </div>
   );
 }

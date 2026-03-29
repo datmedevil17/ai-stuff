@@ -201,7 +201,7 @@ export default function Platform() {
 
         {/* Workspace */}
         <div className="flex-1 overflow-hidden">
-          <AgentWorkspace key={activeTab} tab={activeTab} />
+          <AgentWorkspace key={activeTab} tab={activeTab} onNavigateToTab={setActiveTab} />
         </div>
       </div>
     </div>
