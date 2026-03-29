@@ -22,9 +22,9 @@ import { AgentOutput } from "./AgentOutput";
 
 // ─── Node picker options ───────────────────────────────────────────────────────
 const PICKER_OPTS = [
-  { type: "inputNode",   icon: "📥", label: "Input Node",   desc: "Data source / entry point" },
+  { type: "inputNode", icon: "📥", label: "Input Node", desc: "Data source / entry point" },
   { type: "processNode", icon: "⚙️", label: "Process Node", desc: "Processing / transform step" },
-  { type: "outputNode",  icon: "📤", label: "Output Node",  desc: "Result / exit point" },
+  { type: "outputNode", icon: "📤", label: "Output Node", desc: "Result / exit point" },
 ];
 
 const LOG_ICON: Record<LogLine["level"], string> = {
@@ -32,7 +32,7 @@ const LOG_ICON: Record<LogLine["level"], string> = {
 };
 const LOG_COLOR: Record<LogLine["level"], string> = {
   info: "text-neutral-400", success: "text-emerald-400",
-  warn: "text-amber-400",   error: "text-red-400",
+  warn: "text-amber-400", error: "text-red-400",
 };
 
 // Agent node id → tab id mapping for War Room context menu
@@ -491,16 +491,6 @@ export function AgentWorkspace({ tab, onNavigateToTab }: Props) {
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, [contextMenu]);
-
-  // ── Save current nodes/edges back to active pipeline before switching ─────
-  const saveCurrentPipeline = useCallback(
-    (currentNodes: Node[], currentEdges: Edge[]) => {
-      setPipelineList((prev) =>
-        prev.map((p) => (p.id === activePId ? { ...p, nodes: currentNodes, edges: currentEdges } : p))
-      );
-    },
-    [activePId]
-  );
 
   // ── Switch pipeline ────────────────────────────────────────────────────────
   const switchPipeline = useCallback(

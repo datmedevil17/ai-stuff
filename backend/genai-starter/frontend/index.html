@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinPersona — AI-Powered Financial Persona Engine</title>
+    <meta name="description" content="3-layer financial persona segmentation engine with rule-based, ML clustering, and LLM-based analysis.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ── CSS Reset & Variables ────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-primary: #0a0f1c;
+            --bg-card: #111827;
+            --bg-card-hover: #1a2332;
+            --bg-input: #0d1321;
+            --border: #1e293b;
+            --border-focus: #6366f1;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-indigo: #6366f1;
+            --accent-violet: #8b5cf6;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --accent-cyan: #06b6d4;
+            --gradient-primary: linear-gradient(135deg, #6366f1, #8b5cf6);
+            --gradient-card: linear-gradient(145deg, #111827 0%, #0d1321 100%);
+            --shadow-lg: 0 20px 60px rgba(0,0,0,0.4);
+            --shadow-glow: 0 0 40px rgba(99,102,241,0.15);
+            --radius: 12px;
+            --radius-lg: 16px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* ── Header ──────────────────────────────────────────────── */
+        .header {
+            background: linear-gradient(180deg, rgba(99,102,241,0.08) 0%, transparent 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+            position: relative;
+        }
+        .header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+            position: relative;
+        }
+
+        /* ── Tab Navigation ─────────────────────────────────────── */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            background: rgba(17,24,39,0.5);
+            border-bottom: 1px solid var(--border);
+        }
+        .tab-btn {
+            padding: 0.6rem 1.4rem;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .tab-btn:hover { color: var(--text-primary); border-color: var(--text-muted); }
+        .tab-btn.active {
+            background: var(--gradient-primary);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(99,102,241,0.3);
+        }
+
+        /* ── Main Container ─────────────────────────────────────── */
+        .container { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── Card ────────────────────────────────────────────────── */
+        .card {
+            background: var(--gradient-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-lg);
+        }
+        .card h2 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .card h2 .icon { font-size: 1.3rem; }
+
+        /* ── Form Elements ───────────────────────────────────────── */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 0.65rem 0.85rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: border-color 0.2s ease;
+            outline: none;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+        }
+        textarea { resize: vertical; min-height: 100px; }
+
+        /* Checkboxes */
+        .checkbox-row {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+        .checkbox-row label {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        .checkbox-row input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent-indigo);
+        }
+
+        /* Multi-select goals */
+        .goal-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.25rem 0;
+        }
+        .goal-chip {
+            padding: 0.4rem 0.9rem;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        .goal-chip:hover { border-color: var(--accent-indigo); color: var(--text-primary); }
+        .goal-chip.selected {
+            background: rgba(99,102,241,0.15);
+            border-color: var(--accent-indigo);
+            color: var(--accent-indigo);
+        }
+
+        /* ── Buttons ─────────────────────────────────────────────── */
+        .btn {
+            padding: 0.75rem 1.8rem;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(99,102,241,0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(99,102,241,0.4);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+        .btn-outline:hover { border-color: var(--text-muted); color: var(--text-primary); }
+
+        .btn-row { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+
+        /* ── User ID Banner ─────────────────────────────────────── */
+        .user-banner {
+            background: rgba(99,102,241,0.08);
+            border: 1px solid rgba(99,102,241,0.2);
+            border-radius: var(--radius);
+            padding: 0.75rem 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.85rem;
+        }
+        .user-banner .uid { font-family: monospace; color: var(--accent-indigo); font-weight: 600; }
+
+        /* ── Results ─────────────────────────────────────────────── */
+        .results-grid { display: grid; gap: 1rem; }
+
+        .persona-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 0.25rem;
+            animation: popIn 0.4s ease both;
+        }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .persona-badge.young_investor { background: rgba(6,182,212,0.15); color: #06b6d4; border: 1px solid rgba(6,182,212,0.3); }
+        .persona-badge.debt_stressed { background: rgba(244,63,94,0.15); color: #f43f5e; border: 1px solid rgba(244,63,94,0.3); }
+        .persona-badge.wealth_builder { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+        .persona-badge.retirement_planner { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+        .persona-badge.underinsured { background: rgba(244,63,94,0.15); color: #fb7185; border: 1px solid rgba(244,63,94,0.3); }
+        .persona-badge.cash_flow_tight { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+        .persona-badge.conservative_saver { background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
+        .persona-badge.aggressive_investor { background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
+
+        .confidence-bar {
+            width: 60px;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 99px;
+            overflow: hidden;
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+        .confidence-bar .fill {
+            height: 100%;
+            border-radius: 99px;
+            background: var(--accent-emerald);
+            transition: width 0.6s ease;
+        }
+
+        .persona-detail {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
+            animation: fadeIn 0.3s ease both;
+        }
+        .persona-detail .source-tag {
+            font-size: 0.7rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .source-tag.rule { background: rgba(16,185,129,0.15); color: #10b981; }
+        .source-tag.cluster { background: rgba(245,158,11,0.15); color: #f59e0b; }
+        .source-tag.llm { background: rgba(99,102,241,0.15); color: #818cf8; }
+
+        .rec-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            margin-bottom: 0.75rem;
+            transition: border-color 0.2s ease;
+            animation: fadeIn 0.3s ease both;
+        }
+        .rec-card:hover { border-color: var(--accent-indigo); }
+        .rec-card .rec-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.3rem; }
+        .rec-card .rec-desc { color: var(--text-secondary); font-size: 0.85rem; }
+        .rec-card .rec-meta {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 0.6rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .priority-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .priority-dot.p1 { background: var(--accent-rose); }
+        .priority-dot.p2 { background: var(--accent-amber); }
+        .priority-dot.p3 { background: var(--accent-emerald); }
+
+        /* ── File Upload ─────────────────────────────────────────── */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        .upload-zone:hover, .upload-zone.drag-over {
+            border-color: var(--accent-indigo);
+            background: rgba(99,102,241,0.05);
+        }
+        .upload-zone .upload-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .upload-zone p { color: var(--text-secondary); font-size: 0.9rem; }
+        .upload-zone .file-name {
+            color: var(--accent-emerald);
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+        .upload-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* ── Loading Spinner ─────────────────────────────────────── */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Toast ───────────────────────────────────────────────── */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 0.85rem 1.5rem;
+            border-radius: var(--radius);
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            animation: slideUp 0.3s ease, fadeOut 0.3s ease 2.7s;
+            animation-fill-mode: both;
+        }
+        .toast.success { background: rgba(16,185,129,0.9); color: #fff; }
+        .toast.error { background: rgba(244,63,94,0.9); color: #fff; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
+
+        /* ── Responsive ──────────────────────────────────────────── */
+        @media (max-width: 640px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .tabs { flex-wrap: wrap; }
+            .header h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <h1>💎 FinPersona</h1>
+        <p>AI-Powered Financial Persona Segmentation Engine</p>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tabs">
+        <button class="tab-btn active" data-tab="structured" id="tab-structured">📋 Structured Form</button>
+        <button class="tab-btn" data-tab="document" id="tab-document">📄 Document Upload</button>
+        <button class="tab-btn" data-tab="chat" id="tab-chat">💬 Chat Input</button>
+        <button class="tab-btn" data-tab="war-room" id="tab-war-room">⚔️ Agent War Room</button>
+        <button class="tab-btn" data-tab="results" id="tab-results">🎯 Results</button>
+    </nav>
+
+    <main class="container">
+
+        <!-- User ID Banner -->
+        <div class="user-banner" id="user-banner" style="display:none;">
+            <span>Active User: <span class="uid" id="active-uid"></span></span>
+            <button class="btn btn-outline" onclick="resetUser()" style="padding:0.35rem 0.8rem; font-size:0.8rem;">New User</button>
+        </div>
+
+        <!-- ═══════ TAB 1: Structured Form ═══════ -->
+        <div class="tab-content active" id="content-structured">
+            <div class="card">
+                <h2><span class="icon">👤</span> Personal & Income</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Age</label>
+                        <input type="number" id="age" min="18" max="100" placeholder="28">
+                    </div>
+                    <div class="form-group">
+                        <label>Annual Income (₹)</label>
+                        <input type="number" id="annual_income" min="0" placeholder="800000">
+                    </div>
+                    <div class="form-group">
+                        <label>Monthly Expenses (₹)</label>
+                        <input type="number" id="monthly_expenses" min="0" placeholder="30000">
+                    </div>
+                    <div class="form-group">
+                        <label>Dependents</label>
+                        <input type="number" id="dependents" min="0" placeholder="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="icon">📈</span> Assets</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Mutual Funds (₹)</label>
+                        <input type="number" id="mutual_funds" min="0" placeholder="200000">
+                    </div>
+                    <div class="form-group">
+                        <label>Stocks (₹)</label>
+                        <input type="number" id="stocks" min="0" placeholder="150000">
+                    </div>
+                    <div class="form-group">
+                        <label>Fixed Deposits (₹)</label>
+                        <input type="number" id="fixed_deposits" min="0" placeholder="100000">
+                    </div>
+                    <div class="form-group">
+                        <label>Other Assets (₹)</label>
+                        <input type="number" id="other_assets" min="0" placeholder="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="icon">💳</span> Liabilities</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Home Loan (₹)</label>
+                        <input type="number" id="home_loan" min="0" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Car Loan (₹)</label>
+                        <input type="number" id="car_loan" min="0" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Personal Loan (₹)</label>
+                        <input type="number" id="personal_loan" min="0" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Monthly EMI (₹)</label>
+                        <input type="number" id="monthly_emi" min="0" placeholder="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="icon">🛡️</span> Insurance</h2>
+                <div class="checkbox-row">
+                    <label><input type="checkbox" id="has_life_insurance"> Life Insurance</label>
+                    <label><input type="checkbox" id="has_health_insurance"> Health Insurance</label>
+                </div>
+                <div class="form-grid" style="margin-top:0.75rem;">
+                    <div class="form-group">
+                        <label>Life Insurance Cover (₹)</label>
+                        <input type="number" id="life_insurance_cover" min="0" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Health Insurance Cover (₹)</label>
+                        <input type="number" id="health_insurance_cover" min="0" placeholder="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="icon">🎯</span> Financial Goals</h2>
+                <div class="goal-chips" id="goal-chips">
+                    <button class="goal-chip" data-goal="house">🏠 House</button>
+                    <button class="goal-chip" data-goal="retirement">🏖️ Retirement</button>
+                    <button class="goal-chip" data-goal="education">🎓 Education</button>
+                    <button class="goal-chip" data-goal="travel">✈️ Travel</button>
+                    <button class="goal-chip" data-goal="emergency_fund">🆘 Emergency Fund</button>
+                    <button class="goal-chip" data-goal="wedding">💍 Wedding</button>
+                    <button class="goal-chip" data-goal="car">🚗 Car</button>
+                    <button class="goal-chip" data-goal="other">📦 Other</button>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-primary" id="btn-submit-structured" onclick="submitStructured()">
+                    Submit & Analyse
+                </button>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB 2: Document Upload ═══════ -->
+        <div class="tab-content" id="content-document">
+            <div class="card">
+                <h2><span class="icon">📄</span> Upload Financial Document</h2>
+                <p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom:1rem;">
+                    Supported: CAMS/KFintech statements, Bank statements, Form 16
+                </p>
+                <div class="upload-zone" id="upload-zone">
+                    <input type="file" id="file-input" accept=".pdf">
+                    <div class="upload-icon">📁</div>
+                    <p>Drag & drop your PDF here, or click to browse</p>
+                    <div class="file-name" id="file-name" style="display:none;"></div>
+                </div>
+                <div class="form-grid" style="margin-top:1rem;">
+                    <div class="form-group">
+                        <label>Document Type</label>
+                        <select id="source-type">
+                            <option value="other">Auto-detect</option>
+                            <option value="cams_pdf">CAMS / KFintech</option>
+                            <option value="bank_statement">Bank Statement</option>
+                            <option value="form16">Form 16</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" id="btn-upload" onclick="uploadDocument()" disabled>
+                        Upload & Extract
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB 3: Chat Input ═══════ -->
+        <div class="tab-content" id="content-chat">
+            <div class="card">
+                <h2><span class="icon">💬</span> Tell Us About Your Finances</h2>
+                <p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom:1rem;">
+                    Type naturally! Our AI will extract financial signals from your message.
+                </p>
+                <div class="form-group">
+                    <textarea id="chat-message" placeholder="e.g. I'm 32, earn 15 LPA, have 2 kids, no insurance. I want to retire by 50 and buy a house next year. I have 5L in mutual funds and a home loan EMI of 25k/month."></textarea>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" id="btn-chat" onclick="submitChat()">
+                        Analyse Message
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: War Room ═══════ -->
+        <div class="tab-content" id="content-war-room">
+            <div id="war-room-empty" class="card" style="text-align:center; padding:3rem;">
+                <div style="font-size:3rem; margin-bottom:1rem;">🛡️</div>
+                <h2 style="justify-content:center;">Financial War Room</h2>
+                <p style="color:var(--text-secondary);">Deploy our 6-agent strike team to build your ultimate financial strategy.</p>
+                <div class="btn-row" style="justify-content:center;">
+                    <button class="btn btn-primary" id="btn-war-room" onclick="activateWarRoom()">
+                        🚀 Deploy 6 Agents
+                    </button>
+                </div>
+            </div>
+
+            <div id="war-room-active" style="display:none;">
+                <!-- Agent Console Log -->
+                <div class="card" style="border-left: 4px solid var(--accent-indigo);">
+                    <h2><span class="icon">📟</span> Agent Activity Log</h2>
+                    <div id="agent-work-log" style="height:150px; overflow-y:auto; font-family:monospace; background:black; padding:1rem; border-radius:8px; font-size:0.8rem; color:var(--accent-emerald);">
+                    </div>
+                </div>
+
+                <!-- Exec synthesis -->
+                <div class="card" style="background: linear-gradient(135deg, rgba(8,15,46,0.8), rgba(17,24,39,0.8));">
+                    <h2><span class="icon">🎖️</span> Executive Gold Strategy</h2>
+                    <div id="exec-synthesis" style="font-size:0.95rem; white-space:pre-wrap;"></div>
+                </div>
+
+                <!-- Detailed Reports -->
+                <div class="form-grid">
+                    <div class="card">
+                        <h3>📋 Data Integrity</h3>
+                        <div id="report-data" style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.5rem; white-space:pre-wrap;"></div>
+                    </div>
+                    <div class="card">
+                        <h3>⚖️ Tax Wizardry</h3>
+                        <div id="report-tax" style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.5rem; white-space:pre-wrap;"></div>
+                    </div>
+                    <div class="card">
+                        <h3>📡 Portfolio X-Ray</h3>
+                        <div id="report-portfolio" style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.5rem; white-space:pre-wrap;"></div>
+                    </div>
+                    <div class="card">
+                        <h3>🛡️ Risk Shield</h3>
+                        <div id="report-risk" style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.5rem; white-space:pre-wrap;"></div>
+                    </div>
+                    <div class="card full">
+                        <h3>🔥 FIRE Roadmap</h3>
+                        <div id="report-fire" style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.5rem; white-space:pre-wrap;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB 4: Results ═══════ -->
+        <div class="tab-content" id="content-results">
+            <div id="results-empty" class="card" style="text-align:center; padding:3rem;">
+                <div style="font-size:3rem; margin-bottom:1rem;">🔍</div>
+                <h2 style="justify-content:center;">No Analysis Yet</h2>
+                <p style="color:var(--text-secondary);">Submit data via the Structured Form, Document Upload, or Chat to see your persona analysis and recommendations.</p>
+            </div>
+            <div id="results-content" style="display:none;">
+                <div class="card">
+                    <h2><span class="icon">🎭</span> Your Personas</h2>
+                    <div id="persona-badges"></div>
+                    <div id="persona-details" style="margin-top:1rem;"></div>
+                </div>
+                <div class="card">
+                    <h2><span class="icon">💡</span> Personalised Recommendations</h2>
+                    <div id="recommendations-list"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════
+        // STATE
+        // ═══════════════════════════════════════════════════════════
+        let currentUserId = null;
+        let selectedGoals = new Set();
+
+        // ── Tabs ────────────────────────────────────────────────────
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('content-' + btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        // ── Goal chips ──────────────────────────────────────────────
+        document.querySelectorAll('.goal-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                const goal = chip.dataset.goal;
+                if (selectedGoals.has(goal)) {
+                    selectedGoals.delete(goal);
+                    chip.classList.remove('selected');
+                } else {
+                    selectedGoals.add(goal);
+                    chip.classList.add('selected');
+                }
+            });
+        });
+
+        // ── File upload ─────────────────────────────────────────────
+        const fileInput = document.getElementById('file-input');
+        const uploadZone = document.getElementById('upload-zone');
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                document.getElementById('file-name').textContent = '📎 ' + fileInput.files[0].name;
+                document.getElementById('file-name').style.display = 'block';
+                document.getElementById('btn-upload').disabled = false;
+            }
+        });
+
+        uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+        uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                fileInput.dispatchEvent(new Event('change'));
+            }
+        });
+
+        // ═══════════════════════════════════════════════════════════
+        // API CALLS
+        // ═══════════════════════════════════════════════════════════
+
+        function showToast(msg, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function setLoading(btnId, loading) {
+            const btn = document.getElementById(btnId);
+            if (loading) {
+                btn.disabled = true;
+                btn._originalText = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner"></span> Processing...';
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = btn._originalText;
+            }
+        }
+
+        function updateUserBanner(uid) {
+            currentUserId = uid;
+            document.getElementById('active-uid').textContent = uid;
+            document.getElementById('user-banner').style.display = 'flex';
+        }
+
+        function resetUser() {
+            currentUserId = null;
+            document.getElementById('user-banner').style.display = 'none';
+            document.getElementById('results-content').style.display = 'none';
+            document.getElementById('results-empty').style.display = 'block';
+        }
+
+        function val(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+        // ── Submit Structured Form ──────────────────────────────────
+        async function submitStructured() {
+            setLoading('btn-submit-structured', true);
+            try {
+                const body = {
+                    age: val('age') || 25,
+                    annual_income: val('annual_income'),
+                    monthly_expenses: val('monthly_expenses'),
+                    mutual_funds: val('mutual_funds'),
+                    stocks: val('stocks'),
+                    fixed_deposits: val('fixed_deposits'),
+                    other_assets: val('other_assets'),
+                    home_loan: val('home_loan'),
+                    car_loan: val('car_loan'),
+                    personal_loan: val('personal_loan'),
+                    monthly_emi: val('monthly_emi'),
+                    has_life_insurance: document.getElementById('has_life_insurance').checked,
+                    has_health_insurance: document.getElementById('has_health_insurance').checked,
+                    life_insurance_cover: val('life_insurance_cover'),
+                    health_insurance_cover: val('health_insurance_cover'),
+                    dependents: val('dependents'),
+                    goals: [...selectedGoals],
+                };
+
+                const url = currentUserId
+                    ? `/ingest/structured?user_id=${currentUserId}`
+                    : '/ingest/structured';
+
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.detail || 'Submission failed');
+
+                updateUserBanner(data.user_id);
+                showToast('Structured data saved! Fetching analysis...');
+
+                await fetchAnalysis(data.user_id);
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                setLoading('btn-submit-structured', false);
+            }
+        }
+
+        // ── Upload Document ─────────────────────────────────────────
+        async function uploadDocument() {
+            setLoading('btn-upload', true);
+            try {
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('source_type', document.getElementById('source-type').value);
+                if (currentUserId) formData.append('user_id', currentUserId);
+
+                const res = await fetch('/ingest/document', { method: 'POST', body: formData });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.detail || 'Upload failed');
+
+                updateUserBanner(data.user_id);
+                showToast(`Document processed: ${data.pages_parsed} pages`);
+
+                await fetchAnalysis(data.user_id);
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                setLoading('btn-upload', false);
+            }
+        }
+
+        // ── Chat Submit ─────────────────────────────────────────────
+        async function submitChat() {
+            const message = document.getElementById('chat-message').value.trim();
+            if (!message) { showToast('Please type a message', 'error'); return; }
+
+            setLoading('btn-chat', true);
+            try {
+                const res = await fetch('/ingest/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message, user_id: currentUserId }),
+                });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.detail || 'Chat processing failed');
+
+                updateUserBanner(data.user_id);
+                showToast('Chat analysed! Fetching personas...');
+
+                await fetchAnalysis(data.user_id);
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                setLoading('btn-chat', false);
+            }
+        }
+
+        // ── War Room Trigger ────────────────────────────────────────
+        async function activateWarRoom() {
+            if (!currentUserId) { showToast('Please ingest data first!', 'error'); return; }
+
+            setLoading('btn-war-room', true);
+            document.getElementById('war-room-empty').style.display = 'none';
+            document.getElementById('war-room-active').style.display = 'block';
+
+            // Clear previous
+            const log = document.getElementById('agent-work-log');
+            log.innerHTML = '> DEPLOYING STRIKE TEAM...<br>';
+
+            try {
+                // Simulate log progression for "cool" effect while API runs
+                const logs = [
+                    'Surgeon checking data integrity...',
+                    'Tax Wizard parsing regime efficiency...',
+                    'Market Analyst calculating XIRR...',
+                    'Risk Shield evaluating insurance gap...',
+                    'Planner mapping FIRE roadmap...',
+                    'Synthesis in progress...'
+                ];
+                let i = 0;
+                const interval = setInterval(() => {
+                    if (i < logs.length) {
+                        log.innerHTML += `> ${logs[i]}<br>`;
+                        log.scrollTop = log.scrollHeight;
+                        i++;
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 2000);
+
+                const res = await fetch(`/analyze/war-room/${currentUserId}`);
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail);
+
+                // Final display
+                log.innerHTML += `> MISSION ACCOMPLISHED.<br>`;
+                document.getElementById('exec-synthesis').innerText = data.final_synthesis;
+                document.getElementById('report-data').innerText = data.data_report;
+                document.getElementById('report-tax').innerText = data.tax_report;
+                document.getElementById('report-portfolio').innerText = data.portfolio_report;
+                document.getElementById('report-risk').innerText = data.risk_report;
+                document.getElementById('report-fire').innerText = data.fire_report;
+
+            } catch (err) {
+                showToast(err.message, 'error');
+                document.getElementById('war-room-empty').style.display = 'block';
+                document.getElementById('war-room-active').style.display = 'none';
+            } finally {
+                setLoading('btn-war-room', false);
+            }
+        }
+
+        // ── Fetch Analysis Results ──────────────────────────────────
+        async function fetchAnalysis(userId) {
+            try {
+                const res = await fetch(`/personas/${userId}`);
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.detail || 'Analysis failed');
+
+                renderResults(data);
+                // Switch to results tab
+                document.querySelector('[data-tab="results"]').click();
+            } catch (err) {
+                showToast('Analysis: ' + err.message, 'error');
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // RENDERING
+        // ═══════════════════════════════════════════════════════════
+
+        const PERSONA_EMOJIS = {
+            young_investor: '🚀',
+            debt_stressed: '😰',
+            wealth_builder: '💎',
+            retirement_planner: '🏖️',
+            underinsured: '⚠️',
+            cash_flow_tight: '💸',
+            conservative_saver: '🏦',
+            aggressive_investor: '🔥',
+        };
+
+        function renderResults(data) {
+            document.getElementById('results-empty').style.display = 'none';
+            document.getElementById('results-content').style.display = 'block';
+
+            // Persona Badges
+            const badgesHtml = data.persona_names.map((name, i) => {
+                const persona = data.personas[i];
+                const emoji = PERSONA_EMOJIS[persona.persona] || '🎭';
+                return `<span class="persona-badge ${persona.persona}">${emoji} ${name}</span>`;
+            }).join('');
+            document.getElementById('persona-badges').innerHTML = badgesHtml;
+
+            // Persona Details
+            const detailsHtml = data.personas.map((p, i) => {
+                const confPct = Math.round(p.confidence * 100);
+                return `
+                    <div class="persona-detail" style="animation-delay:${i * 0.1}s">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                            <strong>${PERSONA_EMOJIS[p.persona] || ''} ${data.persona_names[i]}</strong>
+                            <div>
+                                <span class="source-tag ${p.source}">${p.source}</span>
+                                <span style="font-size:0.8rem; color:var(--text-muted); margin-left:0.5rem;">${confPct}%</span>
+                                <span class="confidence-bar"><span class="fill" style="width:${confPct}%"></span></span>
+                            </div>
+                        </div>
+                        <div style="font-size:0.85rem; color:var(--text-secondary);">${p.reasoning}</div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('persona-details').innerHTML = detailsHtml;
+
+            // Recommendations
+            const recsHtml = data.recommendations.map((r, i) => {
+                const pClass = r.priority <= 1 ? 'p1' : r.priority <= 2 ? 'p2' : 'p3';
+                return `
+                    <div class="rec-card" style="animation-delay:${i * 0.05}s">
+                        <div class="rec-title">${r.title}</div>
+                        <div class="rec-desc">${r.description}</div>
+                        <div class="rec-meta">
+                            <span><span class="priority-dot ${pClass}"></span> Priority ${r.priority}</span>
+                            <span>📂 ${r.category}</span>
+                            <span>🎭 ${r.source_persona.replace(/_/g, ' ')}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('recommendations-list').innerHTML = recsHtml;
+        }
+    </script>
+</body>
+</html>
